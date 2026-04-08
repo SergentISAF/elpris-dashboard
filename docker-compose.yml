@@ -1,0 +1,12 @@
+services:
+  elpris:
+    build: .
+    container_name: elpris-dashboard
+    restart: unless-stopped
+    ports:
+      - "8585:8585"
+    env_file:
+      - .env
+    volumes:
+      - ./static:/app/static
+      - ./data:/app/data
