@@ -79,7 +79,7 @@ Viser dit faktiske elforbrug fra din elmåler.
 
 ```env
 ELOVERBLIK_TOKEN=din-token
-METERING_POINTS=571313113160184360,571313113162353856
+METERING_POINTS=dit-målepunkt-id-1,dit-målepunkt-id-2
 ```
 
 ## Tilpas udbydere

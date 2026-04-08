@@ -41,8 +41,7 @@
         .bar { width: 100%; min-width: 8px; border-radius: 3px 3px 0 0; transition: opacity 0.2s; cursor: pointer; position: relative; }
         .bar:hover { opacity: 0.8; }
         .bar-label { font-size: 0.55rem; color: var(--text-dim); margin-top: 4px; writing-mode: vertical-rl; text-orientation: mixed; height: 20px; }
-        .tooltip { display: none; position: absolute; bottom: 105%; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; white-space: nowrap; z-index: 10; pointer-events: none; }
-        .bar:hover .tooltip { display: block; }
+        .tooltip { display: none; position: fixed; background: var(--surface2); border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; white-space: nowrap; z-index: 1000; pointer-events: none; }
         .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; overflow-x: auto; }
         .table-wrap h2 { font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
@@ -133,6 +132,29 @@
     </div>
 
     <script>
+        // Tooltip positioning — follows mouse, stays on screen
+        document.addEventListener('mouseover', e => {
+            const bar = e.target.closest('.bar');
+            if (!bar) return;
+            const tip = bar.querySelector('.tooltip');
+            if (!tip) return;
+            tip.style.display = 'block';
+            const rect = bar.getBoundingClientRect();
+            let top = rect.top - tip.offsetHeight - 8;
+            if (top < 4) top = rect.bottom + 8;
+            let left = rect.left + rect.width/2 - tip.offsetWidth/2;
+            if (left < 4) left = 4;
+            if (left + tip.offsetWidth > window.innerWidth - 4) left = window.innerWidth - tip.offsetWidth - 4;
+            tip.style.top = top + 'px';
+            tip.style.left = left + 'px';
+        });
+        document.addEventListener('mouseout', e => {
+            const bar = e.target.closest('.bar');
+            if (!bar) return;
+            const tip = bar.querySelector('.tooltip');
+            if (tip) tip.style.display = 'none';
+        });
+
         let data = null;
         async function fetchData() {
             try { const r = await fetch('/api/data'); data = await r.json(); render(data); }
