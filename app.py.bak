@@ -35,9 +35,6 @@ MINSTROEM_BASE = "https://api.minstroem.app/thirdParty"
 # Energi Data Service (free, no auth needed)
 ENERGI_DATA_URL = "https://api.energidataservice.dk/dataset/Elspotprices"
 
-# Current provider product ID from Strømligning (optional — marks your provider in the table)
-CURRENT_PROVIDER_ID = os.getenv("CURRENT_PROVIDER_ID", "")
-
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 
@@ -47,87 +44,24 @@ def minstroem_token() -> str:
     return base64.b64encode(f"{MINSTROEM_KEY}:{hashed}".encode()).decode()
 
 
-# Providers fetched dynamically from Strømligning API
-PROVIDERS = []
-STROMLIGNING_URL = "https://stromligning.dk/api/companies"
-
-
-async def fetch_providers():
-    """Fetch all providers with prices from Strømligning API (daily)."""
-    global PROVIDERS
-    try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.get(STROMLIGNING_URL)
-            if resp.status_code != 200:
-                return
-            companies = resp.json()
-            now_iso = datetime.now().isoformat()
-            providers = []
-            for c in companies:
-                for p in c.get("products", []):
-                    if p.get("productType") != "variable":
-                        continue
-                    # Find current surcharge — only "Tillæg til spotpris", skip negative/special
-                    tillaeg_oere = 0.0
-                    for price in p.get("prices", []):
-                        if price.get("variable"):
-                            continue
-                        if not price.get("enabled", True):
-                            continue
-                        name = price.get("name", "").lower()
-                        if "tillæg" not in name:
-                            continue
-                        amount = price.get("amount")
-                        if amount is None or amount < 0:
-                            continue
-                        from_date = price.get("fromDate", "")
-                        to_date = price.get("toDate", "")
-                        if to_date and to_date < now_iso:
-                            continue
-                        if from_date and from_date > now_iso:
-                            continue
-                        tillaeg_oere = round(amount * 100, 2)
-                    # Monthly subscription + fees (skip optional and negative)
-                    abo_monthly = 0.0
-                    for fee in p.get("fees", []):
-                        if not fee.get("enabled", True):
-                            continue
-                        if "valgfri" in fee.get("name", "").lower():
-                            continue
-                        amount = fee.get("amount", 0) or 0
-                        if amount < 0:
-                            continue
-                        freq = fee.get("frequency", "monthly")
-                        if freq == "daily":
-                            abo_monthly += amount * 30.44
-                        elif freq == "monthly":
-                            abo_monthly += amount
-                        elif freq == "quarterly":
-                            abo_monthly += amount / 3
-                        elif freq == "yearly":
-                            abo_monthly += amount / 12
-                    binding = p.get("bindingPeriod")
-                    binding_str = f"{binding} mdr" if binding else "Ingen"
-                    is_current = CURRENT_PROVIDER_ID and p.get("id") == CURRENT_PROVIDER_ID
-                    providers.append({
-                        "name": c.get("name", "?"),
-                        "product": p.get("name", ""),
-                        "tillaeg": tillaeg_oere,
-                        "abo": round(abo_monthly, 1),
-                        "binding": binding_str,
-                        "url": c.get("link", ""),
-                        "note": "DIT NUVÆRENDE" if is_current else "",
-                        "current": is_current,
-                    })
-            PROVIDERS.clear()
-            PROVIDERS.extend(providers)
-            cache["providers_updated"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-    except Exception as e:
-        cache["errors"].append(f"Strømligning fejl: {e}")
-
+# --- Electricity providers ---
+# Customize this list with your own providers. Set "current": True on yours.
+# tillaeg = spot markup in øre/kWh, abo = monthly subscription in kr
+PROVIDERS = [
+    {"name": "Enkel Energi",  "tillaeg": 0.0, "abo": 18,  "binding": "Ingen", "url": "https://enkelenergi.dk"},
+    {"name": "Altid Energi",  "tillaeg": 0.0, "abo": 98,  "binding": "Ingen", "url": "https://altidenergi.dk", "note": "98 kr/md ved 12-20k kWh/år"},
+    {"name": "Modstrøm",      "tillaeg": 2.0, "abo": 0,   "binding": "Ingen", "url": "https://modstrom.dk"},
+    {"name": "Norlys",        "tillaeg": 4.0, "abo": 35,  "binding": "Ingen", "url": "https://norlys.dk"},
+    {"name": "EWII Basis",    "tillaeg": 3.75,"abo": 29,  "binding": "Ingen", "url": "https://ewii.dk"},
+    {"name": "EWII Plus",     "tillaeg": 5.5, "abo": 29,  "binding": "Ingen", "url": "https://ewii.dk", "note": "For forbrug >3700 kWh/år"},
+    {"name": "EWII Fastpris", "tillaeg": None,"abo": 15,  "binding": "12 mdr", "url": "https://ewii.dk", "fast_pris_oere": 114.80},
+    {"name": "NRGi",          "tillaeg": 9.0, "abo": 0,   "binding": "Ingen", "url": "https://nrgi.dk"},
+    {"name": "OK El",         "tillaeg": 4.9, "abo": 29,  "binding": "Ingen", "url": "https://ok.dk"},
+]
 
 scheduler = AsyncIOScheduler()
 
+# In-memory cache
 cache = {
     "access_token": None,
     "spot_prices": [],
@@ -217,32 +151,43 @@ async def fetch_spot_prices():
         cache["errors"].append(f"Spotpris fejl: {e}")
 
 
+async def fetch_consumption():
+    token = await get_access_token()
+    if not token or not METERING_POINTS:
+        return
+    cache["access_token"] = token
+    now = datetime.now()
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    payload = {"meteringPoints": {"meteringPoint": METERING_POINTS}}
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            date_from = (now - timedelta(days=365)).strftime("%Y-%m-%d")
+            date_to = now.strftime("%Y-%m-%d")
+            resp = await client.post(f"{ELOVERBLIK_BASE}/meterdata/gettimeseries/{date_from}/{date_to}/Month", headers=headers, json=payload)
+            if resp.status_code == 200:
+                cache["consumption"] = resp.json()
+    except Exception:
+        pass
+
+
 def calculate_provider_costs(yearly_kwh: float) -> list[dict]:
-    """Calculate annual cost incl. tariffer and 25% moms."""
     results = []
     avg_spot = 0.0
     if cache["spot_prices"]:
         avg_spot = sum(p["price_oere"] for p in cache["spot_prices"]) / len(cache["spot_prices"])
 
-    avg_charges_oere = 0.0
-    if cache["minstroem_prices"]:
-        avg_charges_oere = sum(p["charges_kr"] for p in cache["minstroem_prices"]) / len(cache["minstroem_prices"]) * 100
-    else:
-        avg_charges_oere = 31.9  # Fallback: typical DK1 tariffs
-
     for p in PROVIDERS:
-        elpris_oere = avg_spot + (p.get("tillaeg") or 0)
-        total_oere_ex_moms = elpris_oere + avg_charges_oere
-        total_oere_inkl_moms = total_oere_ex_moms * 1.25
-        yearly_cost = (total_oere_inkl_moms / 100) * yearly_kwh + p["abo"] * 12 * 1.25
+        if p.get("tillaeg") is not None:
+            elpris_oere = avg_spot + p["tillaeg"]
+            yearly_cost = (elpris_oere / 100) * yearly_kwh + p["abo"] * 12
+        else:
+            elpris_oere = p.get("fast_pris_oere", 0)
+            yearly_cost = (elpris_oere / 100) * yearly_kwh + p["abo"] * 12
 
         results.append({
             "name": p["name"], "tillaeg": p.get("tillaeg"), "abo": p["abo"],
             "binding": p["binding"], "elpris_oere": round(elpris_oere, 2),
-            "charges_oere": round(avg_charges_oere, 1),
-            "total_oere": round(total_oere_inkl_moms, 1),
             "yearly_cost": round(yearly_cost), "monthly_cost": round(yearly_cost / 12),
-            "kr_per_kwh": round(total_oere_inkl_moms / 100, 2),
             "url": p["url"], "note": p.get("note", ""), "current": p.get("current", False),
         })
     results.sort(key=lambda x: x["yearly_cost"])
@@ -251,23 +196,8 @@ def calculate_provider_costs(yearly_kwh: float) -> list[dict]:
 
 async def refresh_data():
     cache["errors"] = []
-    if not PROVIDERS:
-        await fetch_providers()
+    await fetch_spot_prices()
     await fetch_minstroem_prices()
-    if MINSTROEM_KEY:
-        headers = {"Authorization": f"Bearer {minstroem_token()}"}
-        try:
-            async with httpx.AsyncClient(timeout=15) as client:
-                resp = await client.get(f"{MINSTROEM_BASE}/prices/{PRICE_AREA}", headers=headers)
-                if resp.status_code == 200:
-                    cache["spot_prices"] = [
-                        {"hour": p["date"], "price_oere": round(p["price"] * 100, 2)}
-                        for p in resp.json()
-                    ]
-        except Exception:
-            pass
-    if not cache["spot_prices"]:
-        await fetch_spot_prices()
     cache["providers"] = calculate_provider_costs(YEARLY_KWH)
     cache["last_updated"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cache["history"] = load_history()
@@ -285,7 +215,6 @@ async def lifespan(app: FastAPI):
     save_daily_snapshot()
     cache["history"] = load_history()
     scheduler.add_job(refresh_data, "interval", hours=1)
-    scheduler.add_job(fetch_providers, "cron", hour=6, minute=0)
     scheduler.add_job(daily_save, "cron", hour=23, minute=55)
     scheduler.start()
     yield
@@ -306,6 +235,7 @@ async def get_data():
     return {
         "spot": {"current": current_spot, "average": avg_spot, "min": min_spot, "max": max_spot, "prices": spot[-48:]},
         "providers": cache["providers"],
+        "metering_points": METERING_POINTS,
         "yearly_kwh": YEARLY_KWH,
         "address": ADDRESS_LABEL,
         "price_area": PRICE_AREA,
@@ -314,8 +244,6 @@ async def get_data():
         "errors": cache["errors"],
         "history": cache["history"],
         "minstroem": cache["minstroem_prices"],
-        "providers_updated": cache.get("providers_updated", ""),
-        "providers_source": "stromligning.dk",
     }
 
 

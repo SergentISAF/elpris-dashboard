@@ -21,56 +21,263 @@
             --purple: #a855f7;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-        .header h1 { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, var(--blue), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .header .meta { font-size: 0.8rem; color: var(--text-dim); }
-        .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header .meta {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        .status-dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
         .status-dot.ok { background: var(--green); }
         .status-dot.err { background: var(--red); }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-        .card h2 { font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-        .card .big { font-size: 2.2rem; font-weight: 700; }
-        .card .unit { font-size: 0.9rem; color: var(--text-dim); margin-left: 4px; }
-        .card .sub { font-size: 0.8rem; color: var(--text-dim); margin-top: 4px; }
-        .chart-container { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
-        .chart-container h2 { font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
-        .chart { display: flex; align-items: flex-end; gap: 2px; height: 200px; overflow-x: auto; padding-bottom: 20px; position: relative; }
-        .bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 12px; }
-        .bar { width: 100%; min-width: 8px; border-radius: 3px 3px 0 0; transition: opacity 0.2s; cursor: pointer; position: relative; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .card h2 {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+        .card .big {
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+        .card .unit {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            margin-left: 4px;
+        }
+        .card .sub {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        /* Spot price chart */
+        .chart-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .chart-container h2 {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+        .chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 200px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+            position: relative;
+        }
+        .bar-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            min-width: 12px;
+        }
+        .bar {
+            width: 100%;
+            min-width: 8px;
+            border-radius: 3px 3px 0 0;
+            transition: opacity 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
         .bar:hover { opacity: 0.8; }
-        .bar-label { font-size: 0.55rem; color: var(--text-dim); margin-top: 4px; writing-mode: vertical-rl; text-orientation: mixed; height: 20px; }
-        .tooltip { display: none; position: fixed; background: var(--surface2); border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; white-space: nowrap; z-index: 1000; pointer-events: none; }
-        .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; overflow-x: auto; }
-        .table-wrap h2 { font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); color: var(--text-dim); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; }
-        td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+        .bar-label {
+            font-size: 0.55rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            height: 20px;
+        }
+        .tooltip {
+            display: none;
+            position: fixed;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        /* Provider table */
+        .table-wrap {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+        .table-wrap h2 {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 2px solid var(--border);
+            color: var(--text-dim);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+        }
         tr:hover { background: var(--surface2); }
         tr.best td { background: rgba(34, 197, 94, 0.08); }
         tr.best td:first-child { border-left: 3px solid var(--green); }
         tr.current td { background: rgba(168, 85, 247, 0.1); }
         tr.current td:first-child { border-left: 3px solid var(--purple); }
         tr.worst td { background: rgba(239, 68, 68, 0.05); }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
         .badge.green { background: var(--green-dim); color: var(--green); }
         .badge.red { background: var(--red-dim); color: var(--red); }
         .badge.yellow { background: rgba(234, 179, 8, 0.15); color: var(--yellow); }
-        .provider-link { color: var(--blue); text-decoration: none; }
+        .provider-link {
+            color: var(--blue);
+            text-decoration: none;
+        }
         .provider-link:hover { text-decoration: underline; }
         .note { font-size: 0.7rem; color: var(--text-dim); }
-        .extra-cost { font-weight: 700; color: var(--red); }
-        .simulator { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
-        .simulator h2 { font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
-        .sim-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .sim-row label { font-size: 0.9rem; color: var(--text-dim); }
-        .sim-row input[type="range"] { flex: 1; min-width: 200px; accent-color: var(--blue); }
-        .sim-row .sim-value { font-size: 1.2rem; font-weight: 700; min-width: 120px; }
-        .btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
+
+        .savings {
+            font-weight: 700;
+            color: var(--green);
+        }
+        .extra-cost {
+            font-weight: 700;
+            color: var(--red);
+        }
+
+        /* Simulator */
+        .simulator {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .simulator h2 {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+        .sim-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .sim-row label {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+        .sim-row input[type="range"] {
+            flex: 1;
+            min-width: 200px;
+            accent-color: var(--blue);
+        }
+        .sim-row .sim-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            min-width: 120px;
+        }
+
+        .btn {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
         .btn:hover { background: var(--border); }
-        .errors { background: var(--red-dim); border: 1px solid var(--red); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 0.85rem; }
-        @media (max-width: 600px) { body { padding: 10px; } .card .big { font-size: 1.6rem; } .chart { height: 150px; } }
+
+        .errors {
+            background: var(--red-dim);
+            border: 1px solid var(--red);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .card .big { font-size: 1.6rem; }
+            .chart { height: 150px; }
+        }
     </style>
 </head>
 <body>
@@ -85,22 +292,42 @@
             <button class="btn" onclick="refresh()" style="margin-left: 8px;">Opdater</button>
         </div>
     </div>
+
     <div id="errors"></div>
+
     <div class="grid" id="cards">
-        <div class="card"><h2>Spotpris nu</h2><div><span class="big" id="spotNow">--</span><span class="unit">øre/kWh</span></div><div class="sub" id="spotRange">--</div></div>
-        <div class="card"><h2>Gennemsnit (48t)</h2><div><span class="big" id="spotAvg">--</span><span class="unit">øre/kWh</span></div><div class="sub" id="priceArea">--</div></div>
-        <div class="card"><h2>Billigste udbyder</h2><div><span class="big" id="bestProvider">--</span></div><div class="sub" id="bestPrice">--</div></div>
-        <div class="card"><h2>Årsforbrug</h2><div><span class="big" id="yearlyKwh">--</span><span class="unit">kWh</span></div><div class="sub" id="tokenStatus">--</div></div>
+        <div class="card">
+            <h2>Spotpris nu</h2>
+            <div><span class="big" id="spotNow">--</span><span class="unit">øre/kWh</span></div>
+            <div class="sub" id="spotRange">--</div>
+        </div>
+        <div class="card">
+            <h2>Gennemsnit (48t)</h2>
+            <div><span class="big" id="spotAvg">--</span><span class="unit">øre/kWh</span></div>
+            <div class="sub">DK1 (Vestdanmark)</div>
+        </div>
+        <div class="card">
+            <h2>Billigste udbyder</h2>
+            <div><span class="big" id="bestProvider">--</span></div>
+            <div class="sub" id="bestPrice">--</div>
+        </div>
+        <div class="card">
+            <h2>Årsforbrug</h2>
+            <div><span class="big" id="yearlyKwh">17.000</span><span class="unit">kWh</span></div>
+            <div class="sub" id="tokenStatus">--</div>
+        </div>
     </div>
 
     <div class="chart-container" id="minstroemSection" style="display:none;">
         <h2 id="minstroemTitle">Realtidspris i dag (inkl. alle tariffer)</h2>
         <div class="chart" id="minstroemChart" style="height:200px;"></div>
-        <div style="margin-top:8px;font-size:0.75rem;color:var(--text-dim);">Data fra Min Strøm API — fuldpris inkl. spot + transport + afgifter (ekskl. moms og elselskab-tillæg)</div>
+        <div style="margin-top:8px;font-size:0.75rem;color:var(--text-dim);">
+            Data fra Min Strøm API — fuldpris inkl. spot + transport + afgifter (ekskl. moms og elselskab-tillæg)
+        </div>
     </div>
 
     <div class="chart-container">
-        <h2 id="spotTitle">Spotpriser (øre/kWh)</h2>
+        <h2>Spotpriser — DK1 (øre/kWh)</h2>
         <div class="chart" id="chart"></div>
     </div>
 
@@ -108,15 +335,27 @@
         <h2>Simuler med andet forbrug</h2>
         <div class="sim-row">
             <label>Årsforbrug:</label>
-            <input type="range" id="simSlider" min="2000" max="30000" step="500" value="4000">
-            <div class="sim-value"><span id="simValue">4.000</span> kWh</div>
+            <input type="range" id="simSlider" min="2000" max="30000" step="500" value="17000">
+            <div class="sim-value"><span id="simValue">17.000</span> kWh</div>
         </div>
     </div>
 
     <div class="table-wrap">
         <h2>Udbyder-sammenligning (sorteret efter pris)</h2>
         <table>
-            <thead><tr><th>#</th><th>Selskab</th><th>Tillæg</th><th>Abo/md</th><th>Binding</th><th>Elpris</th><th>Pr. måned</th><th>Pr. år</th><th>vs. billigste</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Selskab</th>
+                    <th>Tillæg</th>
+                    <th>Abo/md</th>
+                    <th>Binding</th>
+                    <th>Kr/kWh</th>
+                    <th>Pr. måned</th>
+                    <th>Pr. år</th>
+                    <th>vs. billigste</th>
+                </tr>
+            </thead>
             <tbody id="providerTable"></tbody>
         </table>
     </div>
@@ -126,13 +365,14 @@
         <div class="chart" id="historyChart" style="height:180px;"></div>
     </div>
 
-    <div style="text-align:center;color:var(--text-dim);font-size:0.75rem;padding:20px;">
-        Spotpriser fra Energi Data Service &mdash; Fuldpriser fra Min Strøm API &mdash;
-        Selskabspriser er vejledende (elpris + tillæg + abonnement, ekskl. nettarif, afgifter, moms)
+    <div style="text-align: center; color: var(--text-dim); font-size: 0.75rem; padding: 20px;">
+        Spotpriser fra Min Strøm API &mdash; Tariffer fra N1/Energinet &mdash;
+        Alle priser inkl. spot + tillæg + nettarif + elafgift + 25% moms &mdash;
+        Udbyderpiser fra <a href="https://stromligning.dk" style="color:var(--blue)">Strømligning</a> (opdateres dagligt)
     </div>
 
     <script>
-        // Tooltip positioning — follows mouse, stays on screen
+        // Tooltip positioning
         document.addEventListener('mouseover', e => {
             const bar = e.target.closest('.bar');
             if (!bar) return;
@@ -156,94 +396,249 @@
         });
 
         let data = null;
+
         async function fetchData() {
-            try { const r = await fetch('/api/data'); data = await r.json(); render(data); }
-            catch (e) { document.getElementById('errors').innerHTML = `<div class="errors">Fejl: ${e.message}</div>`; }
+            try {
+                const resp = await fetch('/api/data');
+                data = await resp.json();
+                render(data);
+            } catch (e) {
+                document.getElementById('errors').innerHTML =
+                    `<div class="errors">Fejl ved hentning af data: ${e.message}</div>`;
+            }
         }
-        async function refresh() { document.getElementById('lastUpdated').textContent='Opdaterer...'; await fetch('/api/refresh'); await fetchData(); }
+
+        async function refresh() {
+            document.getElementById('lastUpdated').textContent = 'Opdaterer...';
+            await fetch('/api/refresh');
+            await fetchData();
+        }
+
         async function simulate(kwh) {
-            try { const r = await fetch(`/api/simulate/${kwh}`); const s = await r.json(); renderTable(s.providers); document.getElementById('yearlyKwh').textContent = Number(kwh).toLocaleString('da-DK'); } catch(e){}
+            try {
+                const resp = await fetch(`/api/simulate/${kwh}`);
+                const sim = await resp.json();
+                renderTable(sim.providers);
+                document.getElementById('yearlyKwh').textContent = Number(kwh).toLocaleString('da-DK');
+            } catch (e) {}
         }
 
         function render(d) {
-            document.getElementById('addressLabel').textContent = d.address || '';
-            document.getElementById('statusDot').className = 'status-dot '+(d.errors.length===0?'ok':'err');
-            document.getElementById('lastUpdated').textContent = `Opdateret: ${d.last_updated||'aldrig'}`;
-            if (d.errors.length>0) document.getElementById('errors').innerHTML=`<div class="errors">${d.errors.join('<br>')}</div>`;
-            else document.getElementById('errors').innerHTML='';
-            document.getElementById('spotNow').textContent = d.spot.current?.toFixed(1)||'--';
-            document.getElementById('spotAvg').textContent = d.spot.average?.toFixed(1)||'--';
-            document.getElementById('spotRange').textContent = `Min: ${d.spot.min?.toFixed(1)} — Max: ${d.spot.max?.toFixed(1)} øre/kWh`;
-            document.getElementById('priceArea').textContent = d.price_area==='DK1'?'DK1 (Vestdanmark)':'DK2 (Østdanmark)';
-            document.getElementById('spotTitle').textContent = `Spotpriser — ${d.price_area} (øre/kWh)`;
-            if (d.providers.length>0) { const b=d.providers[0]; document.getElementById('bestProvider').textContent=b.name; document.getElementById('bestPrice').textContent=`${b.monthly_cost.toLocaleString('da-DK')} kr/md — ${b.yearly_cost.toLocaleString('da-DK')} kr/år`; }
-            document.getElementById('yearlyKwh').textContent = Number(d.yearly_kwh).toLocaleString('da-DK');
-            document.getElementById('simSlider').value = d.yearly_kwh;
-            document.getElementById('simValue').textContent = Number(d.yearly_kwh).toLocaleString('da-DK');
-            document.getElementById('tokenStatus').textContent = d.token_ok?'Eloverblik: Forbundet':'';
-            if (d.minstroem&&d.minstroem.length>0) { document.getElementById('minstroemSection').style.display='block'; document.getElementById('minstroemTitle').textContent=`Realtidspris i dag — ${d.address} (inkl. alle tariffer)`; renderMinstroem(d.minstroem); }
+            // Status
+            const dot = document.getElementById('statusDot');
+            dot.className = 'status-dot ' + (d.errors.length === 0 ? 'ok' : 'err');
+            document.getElementById('lastUpdated').textContent = `Opdateret: ${d.last_updated || 'aldrig'}`;
+
+            // Errors
+            const errEl = document.getElementById('errors');
+            if (d.errors.length > 0) {
+                errEl.innerHTML = `<div class="errors">${d.errors.join('<br>')}</div>`;
+            } else {
+                errEl.innerHTML = '';
+            }
+
+            // Spot prices
+            document.getElementById('spotNow').textContent = d.spot.current?.toFixed(1) || '--';
+            document.getElementById('spotAvg').textContent = d.spot.average?.toFixed(1) || '--';
+            document.getElementById('spotRange').textContent =
+                `Min: ${d.spot.min?.toFixed(1)} — Max: ${d.spot.max?.toFixed(1)} øre/kWh`;
+
+            // Best provider
+            if (d.providers.length > 0) {
+                const best = d.providers[0];
+                document.getElementById('bestProvider').textContent = best.name;
+                document.getElementById('bestPrice').textContent =
+                    `${best.monthly_cost.toLocaleString('da-DK')} kr/md — ${best.yearly_cost.toLocaleString('da-DK')} kr/år`;
+            }
+
+            // Token status
+            document.getElementById('tokenStatus').textContent =
+                d.token_ok ? 'Eloverblik: Forbundet' : 'Eloverblik: Ikke forbundet';
+
+            // Min Strøm chart
+            if (d.minstroem && d.minstroem.length > 0) {
+                document.getElementById('minstroemSection').style.display = 'block';
+                renderMinstroem(d.minstroem);
+            }
+
+            // Chart
             renderChart(d.spot.prices);
-            if (d.history&&d.history.length>0) { document.getElementById('historySection').style.display='block'; renderHistory(d.history); }
+
+            // Address label
+            if (d.address) {
+                document.getElementById('addressLabel').textContent = d.address;
+            }
+
+            // History
+            if (d.history && d.history.length > 0) {
+                document.getElementById('historySection').style.display = 'block';
+                renderHistory(d.history);
+            }
+
+            // Table
             renderTable(d.providers);
         }
 
         function renderChart(prices) {
-            const chart=document.getElementById('chart');
-            if (!prices||!prices.length) { chart.innerHTML='<div style="color:var(--text-dim);padding:40px;">Ingen spotpriser</div>'; return; }
-            const max=Math.max(...prices.map(p=>p.price_oere),1); const now=new Date();
-            chart.innerHTML=prices.map(p=>{
-                const h=Math.max((p.price_oere/max)*180,2); const d=new Date(p.hour); const hr=d.getHours().toString().padStart(2,'0');
-                const cur=Math.abs(d-now)<3600000;
-                let c='var(--blue)'; if(p.price_oere<30)c='var(--green)'; else if(p.price_oere<80)c='var(--blue)'; else if(p.price_oere<150)c='var(--yellow)'; else c='var(--red)';
-                if(cur)c='var(--purple)';
-                const day=d.toLocaleDateString('da-DK',{weekday:'short'});
-                return `<div class="bar-wrap"><div class="bar" style="height:${h}px;background:${c};"><div class="tooltip">${day} kl. ${hr}:00<br><strong>${p.price_oere.toFixed(1)} øre/kWh</strong></div></div><div class="bar-label">${hr}</div></div>`;
-            }).join('');
-        }
+            const chart = document.getElementById('chart');
+            if (!prices || prices.length === 0) {
+                chart.innerHTML = '<div style="color:var(--text-dim);padding:40px;">Ingen spotpriser tilgængelige</div>';
+                return;
+            }
 
-        function renderMinstroem(prices) {
-            const chart=document.getElementById('minstroemChart'); const max=Math.max(...prices.map(p=>p.total_oere),1); const now=new Date();
-            chart.innerHTML=prices.map(p=>{
-                const h=Math.max((p.total_oere/max)*180,4); const d=new Date(p.hour); const hr=d.getHours().toString().padStart(2,'0');
-                const cur=Math.abs(d-now)<3600000;
-                const cm={green:'var(--green)',yellow:'var(--yellow)',red:'var(--red)',orange:'var(--yellow)'};
-                let c=cm[p.color]||'var(--blue)'; if(cur)c='var(--purple)';
-                return `<div class="bar-wrap" style="min-width:28px;"><div class="bar" style="height:${h}px;background:${c};"><div class="tooltip">Kl. ${hr}:00${cur?' (NU)':''}<br><strong>${p.total_oere.toFixed(1)} øre/kWh total</strong><br>Spot: ${(p.spot_kr*100).toFixed(1)} øre<br>Tariffer: ${(p.charges_kr*100).toFixed(1)} øre</div></div><div class="bar-label" style="writing-mode:horizontal-tb;font-size:0.65rem;">${hr}</div></div>`;
+            const maxPrice = Math.max(...prices.map(p => p.price_oere), 1);
+            const now = new Date();
+
+            chart.innerHTML = prices.map((p, i) => {
+                const h = Math.max((p.price_oere / maxPrice) * 180, 2);
+                const hourDate = new Date(p.hour);
+                const hourStr = hourDate.getHours().toString().padStart(2, '0');
+                const isCurrent = Math.abs(hourDate - now) < 3600000;
+                const isNegative = p.price_oere < 0;
+
+                let color = 'var(--blue)';
+                if (p.price_oere < 30) color = 'var(--green)';
+                else if (p.price_oere < 80) color = 'var(--blue)';
+                else if (p.price_oere < 150) color = 'var(--yellow)';
+                else color = 'var(--red)';
+
+                if (isCurrent) color = 'var(--purple)';
+
+                const dayStr = hourDate.toLocaleDateString('da-DK', {weekday: 'short'});
+
+                return `
+                    <div class="bar-wrap">
+                        <div class="bar" style="height:${h}px;background:${color};">
+                            <div class="tooltip">
+                                ${dayStr} kl. ${hourStr}:00<br>
+                                <strong>${p.price_oere.toFixed(1)} øre/kWh</strong>
+                            </div>
+                        </div>
+                        <div class="bar-label">${hourStr}</div>
+                    </div>`;
             }).join('');
         }
 
         function renderTable(providers) {
-            const tbody=document.getElementById('providerTable');
-            if (!providers||!providers.length) { tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--text-dim)">Ingen data</td></tr>'; return; }
-            const cheapest=providers[0].yearly_cost;
-            tbody.innerHTML=providers.map((p,i)=>{
-                const diff=p.yearly_cost-cheapest;
-                const cls=p.current?'current':(i===0?'best':(diff>5000?'worst':''));
-                const diffStr=diff===0?'<span class="badge green">BILLIGST</span>':`<span class="extra-cost">+${diff.toLocaleString('da-DK')} kr</span>`;
-                const tillaegStr=p.tillaeg!==null?`${p.tillaeg} øre`:`Fast ${p.elpris_oere} øre`;
-                const bindingBadge=p.binding==='Ingen'?'<span class="badge green">Ingen</span>':`<span class="badge yellow">${p.binding}</span>`;
-                const curBadge=p.current?' <span class="badge" style="background:rgba(168,85,247,0.2);color:var(--purple)">DIN NUVÆRENDE</span>':'';
-                const note=p.note?`<br><span class="note">${p.note}</span>`:'';
-                return `<tr class="${cls}"><td>${i+1}</td><td><a href="${p.url}" target="_blank" class="provider-link">${p.name}</a>${curBadge}${note}</td><td>${tillaegStr}</td><td>${p.abo} kr</td><td>${bindingBadge}</td><td>${p.elpris_oere} øre/kWh</td><td><strong>${p.monthly_cost.toLocaleString('da-DK')} kr</strong></td><td>${p.yearly_cost.toLocaleString('da-DK')} kr</td><td>${diffStr}</td></tr>`;
+            const tbody = document.getElementById('providerTable');
+            if (!providers || providers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-dim)">Ingen data</td></tr>';
+                return;
+            }
+
+            const cheapest = providers[0].yearly_cost;
+
+            tbody.innerHTML = providers.map((p, i) => {
+                const diff = p.yearly_cost - cheapest;
+                const cls = p.current ? 'current' : (i === 0 ? 'best' : (diff > 5000 ? 'worst' : ''));
+                const diffStr = diff === 0
+                    ? '<span class="badge green">BILLIGST</span>'
+                    : `<span class="extra-cost">+${diff.toLocaleString('da-DK')} kr</span>`;
+
+                const tillaegStr = p.tillaeg !== null
+                    ? `${p.tillaeg} øre`
+                    : `Fast ${p.elpris_oere} øre`;
+
+                const bindingBadge = p.binding === 'Ingen'
+                    ? '<span class="badge green">Ingen</span>'
+                    : `<span class="badge yellow">${p.binding}</span>`;
+
+                const currentBadge = p.current ? ' <span class="badge" style="background:rgba(168,85,247,0.2);color:var(--purple)">DIN NUVÆRENDE</span>' : '';
+                const note = p.note ? `<br><span class="note">${p.note}</span>` : '';
+
+                return `<tr class="${cls}">
+                    <td>${i + 1}</td>
+                    <td><a href="${p.url}" target="_blank" class="provider-link">${p.name}</a>${currentBadge}${note}</td>
+                    <td>${tillaegStr}</td>
+                    <td>${p.abo} kr</td>
+                    <td>${bindingBadge}</td>
+                    <td><strong>${p.kr_per_kwh ? p.kr_per_kwh.toFixed(2) : p.elpris_oere} ${p.kr_per_kwh ? 'kr' : 'øre'}</strong></td>
+                    <td><strong>${p.monthly_cost.toLocaleString('da-DK')} kr</strong></td>
+                    <td>${p.yearly_cost.toLocaleString('da-DK')} kr</td>
+                    <td>${diffStr}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        // Slider
+        const slider = document.getElementById('simSlider');
+        const simVal = document.getElementById('simValue');
+        slider.addEventListener('input', () => {
+            simVal.textContent = Number(slider.value).toLocaleString('da-DK');
+        });
+        slider.addEventListener('change', () => {
+            simulate(slider.value);
+        });
+
+        function renderMinstroem(prices) {
+            const chart = document.getElementById('minstroemChart');
+            const maxPrice = Math.max(...prices.map(p => p.total_oere), 1);
+            const now = new Date();
+
+            chart.innerHTML = prices.map(p => {
+                const h = Math.max((p.total_oere / maxPrice) * 180, 4);
+                const hourDate = new Date(p.hour);
+                const hourStr = hourDate.getHours().toString().padStart(2, '0');
+                const isCurrent = Math.abs(hourDate - now) < 3600000;
+
+                const colorMap = {green:'var(--green)', yellow:'var(--yellow)', red:'var(--red)', orange:'var(--yellow)'};
+                let color = colorMap[p.color] || 'var(--blue)';
+                if (isCurrent) color = 'var(--purple)';
+
+                const spotOere = (p.spot_kr * 100).toFixed(1);
+                const chargesOere = (p.charges_kr * 100).toFixed(1);
+
+                return `
+                    <div class="bar-wrap" style="min-width:28px;">
+                        <div class="bar" style="height:${h}px;background:${color};">
+                            <div class="tooltip">
+                                Kl. ${hourStr}:00${isCurrent ? ' (NU)' : ''}<br>
+                                <strong>${p.total_oere.toFixed(1)} øre/kWh total</strong><br>
+                                Spot: ${spotOere} øre<br>
+                                Tariffer: ${chargesOere} øre
+                            </div>
+                        </div>
+                        <div class="bar-label" style="writing-mode:horizontal-tb;font-size:0.65rem;">${hourStr}</div>
+                    </div>`;
             }).join('');
         }
 
         function renderHistory(history) {
-            const chart=document.getElementById('historyChart');
-            if (!history||!history.length) { chart.innerHTML='<div style="color:var(--text-dim);padding:40px;">Historik bygges op — tjek igen i morgen</div>'; return; }
-            const max=Math.max(...history.map(h=>h.max),1);
-            chart.innerHTML=history.map(h=>{
-                const hh=Math.max((h.avg/max)*160,4); const d=new Date(h.date); const ds=d.toLocaleDateString('da-DK',{day:'numeric',month:'short'});
-                let c='var(--blue)'; if(h.avg<50)c='var(--green)'; else if(h.avg<100)c='var(--blue)'; else if(h.avg<150)c='var(--yellow)'; else c='var(--red)';
-                return `<div class="bar-wrap" style="min-width:28px;"><div class="bar" style="height:${hh}px;background:${c};"><div class="tooltip">${ds}<br>Snit: <strong>${h.avg.toFixed(1)}</strong> øre<br>Min: ${h.min.toFixed(1)} / Max: ${h.max.toFixed(1)}</div></div><div class="bar-label" style="writing-mode:horizontal-tb;font-size:0.6rem;">${ds}</div></div>`;
+            const chart = document.getElementById('historyChart');
+            if (!history || history.length === 0) {
+                chart.innerHTML = '<div style="color:var(--text-dim);padding:40px;">Historik bygges op over tid — tjek igen i morgen</div>';
+                return;
+            }
+            const maxPrice = Math.max(...history.map(h => h.max), 1);
+
+            chart.innerHTML = history.map(h => {
+                const avgH = Math.max((h.avg / maxPrice) * 160, 4);
+                const date = new Date(h.date);
+                const dayStr = date.toLocaleDateString('da-DK', {day:'numeric', month:'short'});
+
+                let color = 'var(--blue)';
+                if (h.avg < 50) color = 'var(--green)';
+                else if (h.avg < 100) color = 'var(--blue)';
+                else if (h.avg < 150) color = 'var(--yellow)';
+                else color = 'var(--red)';
+
+                return `
+                    <div class="bar-wrap" style="min-width:28px;">
+                        <div class="bar" style="height:${avgH}px;background:${color};">
+                            <div class="tooltip">
+                                ${dayStr}<br>
+                                Snit: <strong>${h.avg.toFixed(1)}</strong> øre<br>
+                                Min: ${h.min.toFixed(1)} / Max: ${h.max.toFixed(1)}
+                            </div>
+                        </div>
+                        <div class="bar-label" style="writing-mode:horizontal-tb;font-size:0.6rem;">${dayStr}</div>
+                    </div>`;
             }).join('');
         }
 
-        const slider=document.getElementById('simSlider');
-        slider.addEventListener('input',()=>{ document.getElementById('simValue').textContent=Number(slider.value).toLocaleString('da-DK'); });
-        slider.addEventListener('change',()=>{ simulate(slider.value); });
+        // Auto-refresh every 5 minutes
         fetchData();
-        setInterval(fetchData, 5*60*1000);
+        setInterval(fetchData, 5 * 60 * 1000);
     </script>
 </body>
 </html>
